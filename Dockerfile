@@ -32,9 +32,7 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install -r requirements.txt && \
-    # Clean up to reduce image size
-    pip cache purge
+    pip install -r requirements.txt
 
 # Copy application code
 COPY . .
