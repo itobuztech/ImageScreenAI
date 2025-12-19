@@ -16,16 +16,13 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Required for OpenCV
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
+    libxrender1 \
     libgomp1 \
-    # Required for python-magic
     libmagic1 \
-    # Build tools (removed after installation)
     gcc \
     g++ \
     && rm -rf /var/lib/apt/lists/*
