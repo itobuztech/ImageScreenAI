@@ -1,0 +1,58 @@
+# ===============================================================
+# ImageScreenAI - Dockerfile : Optimized for Hugging Face Spaces
+# ===============================================================
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Required for OpenCV
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    # Required for python-magic
+    libmagic1 \
+    # Build tools (removed after installation)
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (layer caching optimization)
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt && \
+    # Clean up to reduce image size
+    pip cache purge
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p data/uploads data/reports data/cache logs && \
+    chmod -R 755 data logs
+
+# Expose port (Hugging Face Spaces uses port 7860 by default)
+EXPOSE 7860
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:7860/health')" || exit 1
+
+# Run the application
+# Note: Hugging Face Spaces expects the app to listen on 0.0.0.0:7860
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]

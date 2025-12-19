@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv
+venv/
+
+# OS
+.DS_Store
+
+# Data / temp files
+data/uploads/
+data/cache/
+data/reports/
+logs/
+
+# Models / large files
+*.pt
+*.bin
+*.onnx

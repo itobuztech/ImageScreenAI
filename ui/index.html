@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Screener</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2d3748;
+            --primary-light: #4a5568;
+            --primary-dark: #1a202c;
+            --secondary: #718096;
+            --accent: #38a169;
+            --accent-light: #68d391;
+            --accent-dark: #2f855a;
+            --warning: #d69e2e;
+            --danger: #e53e3e;
+            --background: #f7fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text: #2d3748;
+            --text-light: #718096;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #2d3748 100%);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 1rem;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo-text .tagline {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-top: 0.125rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            border-radius: 1rem;
+            padding: 1.5rem 1.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .performance-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.125rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 6px rgba(56, 161, 105, 0.2);
+            min-width: 200px;
+            margin: 0 auto;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(56, 161, 105, 0.3);
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0;
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .tab-button {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            flex: 1;
+            text-align: center;
+            border-radius: 0.25rem;
+        }
+
+        .tab-button.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background-color: rgba(56, 161, 105, 0.05);
+        }
+
+        .tab-button:hover:not(.active) {
+            color: var(--primary);
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent-light);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        /* Metrics Grid - Updated for Detailed Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric-card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metric-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .metric-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .metric-weight {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: rgba(56, 161, 105, 0.1);
+            color: var(--accent);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .metric-description {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .metric-details {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: var(--text-light);
+        }
+
+        .detail-value {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* How-to-use Steps */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            font-size: 1.00rem;
+            box-shadow: var(--shadow);
+            padding: 1.0rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 0.5px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Upload Section */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 1rem;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            background-color: #f8fafc;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent);
+            background-color: rgba(56, 161, 105, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .upload-button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .upload-button:hover {
+            background-color: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Thumbnail Grid */
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .thumbnail-item {
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+            height: 120px;
+        }
+
+        .thumbnail-item:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .thumbnail-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            padding: 0.5rem;
+            color: white;
+            font-size: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-thumbnail {
+            background: rgba(229, 62, 62, 0.8);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .remove-thumbnail:hover {
+            background: var(--danger);
+            transform: scale(1.1);
+        }
+
+        /* Start Analysis Button - Centered */
+        .start-analysis-btn {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 6px rgba(56, 161, 105, 0.2);
+        }
+
+        .start-analysis-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(56, 161, 105, 0.3);
+        }
+
+        .start-analysis-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .start-analysis-btn .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        /* Progress Section */
+        .progress-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 0.5rem;
+            background-color: var(--border);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 1rem;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Results Section */
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background-color: white;
+            border: 1px solid var(--border);
+            transition: transform 0.3s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .results-table-container {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            background-color: white;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            background-color: #f8fafc;
+            color: var(--text);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .results-table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-authentic {
+            background-color: rgba(56, 161, 105, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(56, 161, 105, 0.3);
+        }
+
+        .status-review {
+            background-color: rgba(214, 158, 46, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(214, 158, 46, 0.3);
+        }
+
+        .score-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 150px;
+        }
+
+        .score-bar {
+            flex: 1;
+            height: 0.5rem;
+            background-color: var(--border);
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 1rem;
+            transition: width 0.5s ease;
+        }
+
+        .score-low {
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+        }
+
+        .score-medium {
+            background: linear-gradient(90deg, var(--warning), #ecc94b);
+        }
+
+        .score-high {
+            background: linear-gradient(90deg, var(--danger), #fc8181);
+        }
+
+        /* Detailed Analysis */
+        .detailed-analysis {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .analysis-header:hover {
+            background-color: #f8fafc;
+        }
+
+        .analysis-content {
+            display: none;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .analysis-content.show {
+            display: block;
+        }
+
+        .signal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .signal-card {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            background-color: #f8fafc;
+        }
+
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .signal-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+
+        .signal-passed {
+            background-color: rgba(56, 161, 105, 0.1);
+            color: var(--accent);
+            border-color: rgba(56, 161, 105, 0.3);
+        }
+
+        .signal-warning {
+            background-color: rgba(214, 158, 46, 0.1);
+            color: var(--warning);
+            border-color: rgba(214, 158, 46, 0.3);
+        }
+
+        .signal-flagged {
+            background-color: rgba(229, 62, 62, 0.1);
+            color: var(--danger);
+            border-color: rgba(229, 62, 62, 0.3);
+        }
+
+        /* Footer - Reduced spacing */
+        footer {
+            margin-top: 0.1rem;
+            padding-top: 0.1rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-light);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .footer-link:hover {
+            color: var(--accent-dark);
+            text-decoration: underline;
+        }
+
+        /* Action buttons */
+        .action-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .primary-action {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .primary-action:hover {
+            background-color: var(--accent-dark);
+        }
+
+        .secondary-action {
+            background-color: white;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .secondary-action:hover {
+            background-color: rgba(56, 161, 105, 0.1);
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background-color: white;
+            color: var(--text);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .visible {
+            display: block !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero h2 {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-button {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .signal-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+
+        /* Spinner for loading button */
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast hidden" id="toast"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>AI Image Screener</h1>
+                        <div class="tagline">First-pass screening for bulk workflows</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Landing Screen -->
+        <div id="landingScreen">
+            <!-- Hero Section -->
+            <section class="hero">
+                <h2>AI Image Screener</h2>
+                <p class="hero-subtitle">
+                    A practical first-pass AI image screening system designed to identify images that require human review based on statistical and physical patterns.
+                </p>
+                <div class="performance-badge">
+                    <i class="fas fa-chart-line"></i> Screening accuracy: 40-90% detection rate across AI models
+                </div>
+                <br>
+                <button class="cta-button" id="tryNowBtn">
+                    <div class="btn-content">
+                        <i class="fas fa-play-circle"></i> Start Screening
+                    </div>
+                </button>
+            </section>
+
+            <!-- Tab Navigation -->
+            <div class="tabs">
+                <button class="tab-button active" data-tab="features">Features</button>
+                <button class="tab-button" data-tab="metrics">Detection Metrics</button>
+                <button class="tab-button" data-tab="howto">How to Use</button>
+            </div>
+
+            <!-- Features Tab -->
+            <div class="tab-content active" id="featuresTab">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3>Fast Processing</h3>
+                        <p>Parallel processing for batch analysis with real-time progress tracking</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Multi-Signal Detection</h3>
+                        <p>Five independent statistical detectors with weighted ensemble aggregation</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-export"></i>
+                        </div>
+                        <h3>Comprehensive Reports</h3>
+                        <p>Export results in CSV, JSON, and PDF formats for integration and documentation</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-sliders-h"></i>
+                        </div>
+                        <h3>Adjustable Sensitivity</h3>
+                        <p>Conservative, balanced, and aggressive modes for different use cases</p>
+                    </div>
+                </div>
+
+                <!-- Caution Notice -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Important Notice</h3>
+                    </div>
+                    <p style="color: var(--text-light);">
+                        <strong>This is not a perfect AI detector. It's a screening tool that helps reduce manual review workload by flagging suspicious images for human verification.</strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Metrics Tab - Updated with Detailed Cards -->
+            <div class="tab-content" id="metricsTab">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon" style="background: linear-gradient(135deg, #4a5568 0%, #718096 100%);">
+                                <i class="fas fa-wave-square"></i>
+                            </div>
+                            <div>
+                                <div class="metric-title">Gradient-Field PCA</div>
+                            </div>
+                            <span class="metric-weight">Weight: 30%</span>
+                        </div>
+                        <p class="metric-description">
+                            Detects lighting & gradient inconsistencies typical of diffusion models. Analyzes directional light patterns and shadow consistency that often appear unnatural in AI-generated images.
+                        </p>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Detection Method</span>
+                                <span class="detail-value">Principal Component Analysis</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Sensitivity</span>
+                                <span class="detail-value">High for diffusion models</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Performance</span>
+                                <span class="detail-value">85-95% detection rate</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon" style="background: linear-gradient(135deg, #718096 0%, #a0aec0 100%);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="metric-title">Frequency Analysis</div>
+                            </div>
+                            <span class="metric-weight">Weight: 25%</span>
+                        </div>
+                        <p class="metric-description">
+                            Identifies unnatural spectral energy distributions via FFT analysis. AI-generated images often show characteristic frequency patterns different from camera-captured photos.
+                        </p>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Detection Method</span>
+                                <span class="detail-value">Fast Fourier Transform</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Sensitivity</span>
+                                <span class="detail-value">Medium-High</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Performance</span>
+                                <span class="detail-value">75-85% detection rate</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon" style="background: linear-gradient(135deg, #38a169 0%, #68d391 100%);">
+                                <i class="fas fa-braille"></i>
+                            </div>
+                            <div>
+                                <div class="metric-title">Noise Pattern Analysis</div>
+                            </div>
+                            <span class="metric-weight">Weight: 20%</span>
+                        </div>
+                        <p class="metric-description">
+                            Detects missing or artificial sensor noise patterns. Real cameras produce characteristic noise while AI models often generate unnaturally uniform or missing noise patterns.
+                        </p>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Detection Method</span>
+                                <span class="detail-value">Noise Distribution Analysis</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Sensitivity</span>
+                                <span class="detail-value">Medium</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Performance</span>
+                                <span class="detail-value">70-80% detection rate</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon" style="background: linear-gradient(135deg, #d69e2e 0%, #ecc94b 100%);">
+                                <i class="fas fa-text-height"></i>
+                            </div>
+                            <div>
+                                <div class="metric-title">Texture Statistics</div>
+                            </div>
+                            <span class="metric-weight">Weight: 15%</span>
+                        </div>
+                        <p class="metric-description">
+                            Identifies overly smooth or uniform texture regions. AI-generated images often lack the natural texture variation found in real photographs, especially in complex surfaces.
+                        </p>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Detection Method</span>
+                                <span class="detail-value">GLCM Texture Analysis</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Sensitivity</span>
+                                <span class="detail-value">Medium-Low</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Performance</span>
+                                <span class="detail-value">60-70% detection rate</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon" style="background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <div>
+                                <div class="metric-title">Color Distribution</div>
+                            </div>
+                            <span class="metric-weight">Weight: 10%</span>
+                        </div>
+                        <p class="metric-description">
+                            Flags unnatural saturation and color histogram patterns. AI models often produce colors that are either oversaturated or have distribution patterns that differ from real photographs.
+                        </p>
+                        <div class="metric-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Detection Method</span>
+                                <span class="detail-value">Color Histogram Analysis</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Sensitivity</span>
+                                <span class="detail-value">Low-Medium</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Performance</span>
+                                <span class="detail-value">50-65% detection rate</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How-to-use Tab -->
+            <div class="tab-content" id="howtoTab">
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3>Upload Images</h3>
+                        <p>Drag & drop or select images (JPG, PNG, WEBP)</p>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3>Start Analysis</h3>
+                        <p>Click "Start Analysis" to begin screening</p>
+                    </div>
+                    
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3>Review Results</h3>
+                        <p>Check flagged images and export reports</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Screen (Initially Hidden) -->
+        <div id="analysisScreen" class="hidden">
+            <!-- Upload Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-cloud-upload-alt"></i> Upload Images</h2>
+                    <button class="action-button secondary-action" id="backHomeBtn">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                </div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3 class="upload-text">Drag & drop images here</h3>
+                    <p class="upload-text">or</p>
+                    <div class="upload-button" id="fileInputBtn">
+                        <i class="fas fa-folder-open"></i> Browse Files
+                    </div>
+                    <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.webp" style="display: none;">
+                    <p class="text-center mt-2" style="color: var(--text-light); font-size: 0.875rem;">
+                        Supports JPG, JPEG, PNG, WEBP up to 10MB each
+                    </p>
+                </div>
+                
+                <!-- Thumbnail Grid -->
+                <div class="thumbnail-grid" id="thumbnailGrid"></div>
+                
+                <!-- Start Analysis Button - Centered -->
+                <div class="mt-3" id="analyzeButtonContainer" style="display: none;">
+                    <button class="start-analysis-btn" id="analyzeBtn">
+                        <div class="btn-content">
+                            <i class="fas fa-play"></i> Start Analysis
+                        </div>
+                    </button>
+                </div>
+                
+                <div class="progress-container hidden" id="progressContainer">
+                    <div class="progress-header">
+                        <span>Processing</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-details">
+                        <span id="currentFile" class="current-file">Ready to process</span>
+                        <span id="progressStats">0 / 0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden">
+                <!-- Export Buttons -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i class="fas fa-chart-bar"></i> Analysis Results</h2>
+                        <div class="results-actions">
+                            <button class="action-button secondary-action" id="exportCsvBtn">
+                                <i class="fas fa-file-csv"></i> CSV
+                            </button>
+                            <button class="action-button secondary-action" id="exportPdfBtn">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </button>
+                            <button class="action-button secondary-action" id="exportJsonBtn">
+                                <i class="fas fa-file-code"></i> JSON
+                            </button>
+                            <button class="action-button secondary-action" id="newAnalysisBtn">
+                                <i class="fas fa-redo"></i> New
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Results Summary -->
+                    <div class="results-summary" id="resultsSummary">
+                        <!-- Summary cards will be populated here -->
+                    </div>
+                    
+                    <!-- Results Table -->
+                    <div class="results-table-container">
+                        <table class="results-table" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Status</th>
+                                    <th>Score</th>
+                                    <th>Signals</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <!-- Results will be populated here -->
+                                <tr id="noResultsRow">
+                                    <td colspan="5" class="text-center" style="padding: 3rem; color: var(--text-light);">
+                                        <i class="fas fa-chart-bar" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                        <p>No analysis results yet. Upload images and click "Start Analysis" to begin.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Detailed Analysis -->
+                <div class="detailed-analysis">
+                    <div class="analysis-header" id="toggleDetailedAnalysis">
+                        <h3><i class="fas fa-search"></i> Detailed Analysis</h3>
+                        <i class="fas fa-chevron-down" id="detailedAnalysisIcon"></i>
+                    </div>
+                    <div class="analysis-content" id="detailedAnalysisContent">
+                        <!-- Detailed analysis will be populated here -->
+                        <p id="noDetailedAnalysis" class="text-center" style="color: var(--text-light); padding: 2rem;">
+                            <i class="fas fa-eye" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i><br>
+                            Select an image to view detailed analysis
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer with reduced spacing -->
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="#" class="footer-link">Documentation</a>
+                <a href="#" class="footer-link">API Reference</a>
+                <a href="#" class="footer-link">Privacy</a>
+                <a href="#" class="footer-link">Support</a>
+            </div>
+            <p>AI Image Screener v1.0.0 © 2025</p>
+        </div>
+    </footer>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = window.location.origin;
+        const BATCH_ENDPOINT = '/analyze/batch';
+        const HEALTH_ENDPOINT = '/health';
+        const BATCH_PROGRESS_ENDPOINT = '/batch';
+        const CSV_REPORT_ENDPOINT = '/report/csv';
+        const PDF_REPORT_ENDPOINT = '/report/pdf';
+        
+        // Global state
+        let files = [];
+        let fileDataUrls = {};
+        let currentBatchId = null;
+        let batchResults = null;
+        let pollingInterval = null;
+        let selectedImageIndex = null;
+        
+        // DOM Elements
+        const landingScreen = document.getElementById('landingScreen');
+        const analysisScreen = document.getElementById('analysisScreen');
+        const resultsSection = document.getElementById('resultsSection');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const toast = document.getElementById('toast');
+        const tryNowBtn = document.getElementById('tryNowBtn');
+        const backHomeBtn = document.getElementById('backHomeBtn');
+        const newAnalysisBtn = document.getElementById('newAnalysisBtn');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInputBtn = document.getElementById('fileInputBtn');
+        const thumbnailGrid = document.getElementById('thumbnailGrid');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analyzeButtonContainer = document.getElementById('analyzeButtonContainer');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        const currentFile = document.getElementById('currentFile');
+        const progressStats = document.getElementById('progressStats');
+        const resultsSummary = document.getElementById('resultsSummary');
+        const resultsTableBody = document.getElementById('resultsTableBody');
+        const noResultsRow = document.getElementById('noResultsRow');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const exportJsonBtn = document.getElementById('exportJsonBtn');
+        const toggleDetailedAnalysis = document.getElementById('toggleDetailedAnalysis');
+        const detailedAnalysisIcon = document.getElementById('detailedAnalysisIcon');
+        const detailedAnalysisContent = document.getElementById('detailedAnalysisContent');
+        const noDetailedAnalysis = document.getElementById('noDetailedAnalysis');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            setupTabs();
+            checkApiHealth();
+        });
+        
+        // Toast notification
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Loading overlay
+        function showLoading(show) {
+            if (show) {
+                loadingOverlay.classList.add('active');
+            } else {
+                loadingOverlay.classList.remove('active');
+            }
+        }
+        
+        // Tab functionality
+        function setupTabs() {
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.dataset.tab + 'Tab';
+                    
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Setup event listeners - FIXED FOR ONE-CLICK UPLOAD
+        function setupEventListeners() {
+            // Navigation
+            tryNowBtn.addEventListener('click', showAnalysisScreen);
+            backHomeBtn.addEventListener('click', showLandingScreen);
+            newAnalysisBtn.addEventListener('click', resetAnalysis);
+            
+            // File upload - ONLY ONE CLICK HANDLER
+            fileInputBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent bubbling
+                fileInput.click();
+            });
+            
+            // File input change handler
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Remove the uploadArea click handler that was causing double triggers
+            // Keep only drag and drop handlers for uploadArea
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            
+            // Analysis
+            analyzeBtn.addEventListener('click', startAnalysis);
+            
+            // Export
+            exportCsvBtn.addEventListener('click', exportCsv);
+            exportPdfBtn.addEventListener('click', exportPdf);
+            exportJsonBtn.addEventListener('click', exportJson);
+            
+            // Detailed analysis toggle
+            toggleDetailedAnalysis.addEventListener('click', () => {
+                detailedAnalysisContent.classList.toggle('show');
+                detailedAnalysisIcon.classList.toggle('fa-chevron-down');
+                detailedAnalysisIcon.classList.toggle('fa-chevron-up');
+            });
+        }
+        
+        // Screen navigation
+        function showLandingScreen() {
+            landingScreen.classList.remove('hidden');
+            analysisScreen.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function showAnalysisScreen() {
+            landingScreen.classList.add('hidden');
+            analysisScreen.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // File handling
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const droppedFiles = Array.from(e.dataTransfer.files);
+            if (droppedFiles.length > 0) {
+                processFiles(droppedFiles);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            const selectedFiles = Array.from(e.target.files);
+            if (selectedFiles.length > 0) {
+                processFiles(selectedFiles);
+            }
+            // Clear the input value to allow same file selection
+            e.target.value = '';
+        }
+        
+        async function processFiles(newFiles) {
+            const validFiles = [];
+            
+            for (const file of newFiles) {
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                const maxSize = 10 * 1024 * 1024;
+                
+                if (!validTypes.includes(file.type)) {
+                    showToast(`File ${file.name} is not a supported image type.`, 'error');
+                    continue;
+                }
+                
+                if (file.size > maxSize) {
+                    showToast(`File ${file.name} exceeds the 10MB size limit.`, 'error');
+                    continue;
+                }
+                
+                validFiles.push(file);
+            }
+            
+            if (validFiles.length > 0) {
+                showLoading(true);
+                
+                try {
+                    // Generate thumbnails
+                    for (const file of validFiles) {
+                        try {
+                            const dataUrl = await createThumbnail(file);
+                            fileDataUrls[file.name] = dataUrl;
+                        } catch (error) {
+                            console.error('Failed to create thumbnail:', error);
+                            fileDataUrls[file.name] = null;
+                        }
+                    }
+                    
+                    files.push(...validFiles);
+                    updateThumbnailGrid();
+                    showToast(`Added ${validFiles.length} file(s)`, 'success');
+                } catch (error) {
+                    console.error('Error processing files:', error);
+                    showToast('Error processing files. Please try again.', 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }
+        }
+        
+        function createThumbnail(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Set canvas dimensions for thumbnail
+                        const maxSize = 120;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height *= maxSize / width;
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width *= maxSize / height;
+                                height = maxSize;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function updateThumbnailGrid() {
+            thumbnailGrid.innerHTML = '';
+            
+            if (files.length === 0) {
+                thumbnailGrid.style.display = 'none';
+                analyzeButtonContainer.style.display = 'none';
+                return;
+            }
+            
+            thumbnailGrid.style.display = 'grid';
+            analyzeButtonContainer.style.display = 'block';
+            
+            files.forEach((file, index) => {
+                const thumbnailItem = document.createElement('div');
+                thumbnailItem.className = 'thumbnail-item';
+                thumbnailItem.dataset.index = index;
+                
+                const dataUrl = fileDataUrls[file.name] || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f0f0f0"/><text x="50" y="50" font-family="Arial" font-size="14" text-anchor="middle" fill="%23999">No preview</text></svg>';
+                
+                thumbnailItem.innerHTML = `
+                    <img src="${dataUrl}" alt="${file.name}" class="thumbnail-img">
+                    <div class="thumbnail-overlay">
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px;">
+                            ${file.name}
+                        </span>
+                        <button class="remove-thumbnail" data-index="${index}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                thumbnailGrid.appendChild(thumbnailItem);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-thumbnail').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(e.currentTarget.dataset.index);
+                    removeFile(index);
+                });
+            });
+        }
+        
+        function removeFile(index) {
+            const removedFile = files[index].name;
+            files.splice(index, 1);
+            delete fileDataUrls[removedFile];
+            updateThumbnailGrid();
+            showToast(`Removed ${removedFile}`, 'warning');
+        }
+        
+        // Analysis
+        async function startAnalysis() {
+            if (files.length === 0) return;
+            
+            showLoading(true);
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span class="spinner"></span> Processing...';
+            
+            progressFill.style.width = '0%';
+            progressPercent.textContent = '0%';
+            currentFile.textContent = 'Starting analysis...';
+            progressStats.textContent = `0 / ${files.length}`;
+            progressContainer.classList.remove('hidden');
+            
+            clearResults();
+            
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+            
+            try {
+                console.log('Sending batch request for', files.length, 'images...');
+                
+                const response = await fetch(BATCH_ENDPOINT, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const apiResponse = await response.json();
+                console.log('API response:', apiResponse);
+                
+                showLoading(false);
+                
+                if (!apiResponse.success) {
+                    throw new Error(apiResponse.message || 'API request failed');
+                }
+                
+                const data = apiResponse.data;
+                console.log('Data:', data);
+                
+                if (data && data.batch_id) {
+                    console.log('Polling mode: batch_id =', data.batch_id);
+                    currentBatchId = data.batch_id;
+                    showToast('Analysis started. Processing in background...', 'success');
+                    startPollingProgress();
+                    
+                } else if (data && data.result) {
+                    console.log('Immediate results mode');
+                    
+                    progressFill.style.width = '100%';
+                    progressPercent.textContent = '100%';
+                    currentFile.textContent = 'Processing complete!';
+                    progressStats.textContent = `${files.length} / ${files.length}`;
+                    
+                    batchResults = data.result;
+                    
+                    setTimeout(() => {
+                        displayResults();
+                        resetUI();
+                        
+                        resultsSection.classList.remove('hidden');
+                        document.getElementById('resultsSection').scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        showToast(`Analysis complete! Processed ${files.length} image(s)`, 'success');
+                    }, 500);
+                    
+                } else {
+                    console.error('Unexpected response format:', apiResponse);
+                    throw new Error('Invalid response format from server');
+                }
+                
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                showLoading(false);
+                showToast('Analysis failed: ' + error.message, 'error');
+                resetUI();
+            }
+        }
+        
+        function startPollingProgress() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${BATCH_PROGRESS_ENDPOINT}/${currentBatchId}/progress`);
+                    const data = await response.json();
+                    
+                    const sessionData = data.data || data;
+                    
+                    if (sessionData.status === 'completed') {
+                        clearInterval(pollingInterval);
+                        
+                        if (sessionData.result) {
+                            batchResults = sessionData.result;
+                        } else {
+                            batchResults = sessionData;
+                        }
+                        
+                        displayResults();
+                        resetUI();
+                        
+                        resultsSection.classList.remove('hidden');
+                        document.getElementById('resultsSection').scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        showToast('Batch analysis completed!', 'success');
+                        
+                    } else if (sessionData.status === 'processing') {
+                        const progress = sessionData.progress;
+                        if (progress) {
+                            const percent = Math.round((progress.current / progress.total) * 100);
+                            
+                            progressFill.style.width = `${percent}%`;
+                            progressPercent.textContent = `${percent}%`;
+                            currentFile.textContent = progress.filename || 'Processing...';
+                            progressStats.textContent = `${progress.current} / ${progress.total}`;
+                        }
+                    } else if (sessionData.status === 'failed' || sessionData.status === 'interrupted') {
+                        clearInterval(pollingInterval);
+                        showToast(`Analysis failed: ${sessionData.error || 'Unknown error'}`, 'error');
+                        resetUI();
+                    }
+                } catch (error) {
+                    console.error('Progress polling failed:', error);
+                }
+            }, 1000);
+        }
+        
+        function displayResults() {
+            if (!batchResults) {
+                console.error('No results to display:', batchResults);
+                return;
+            }
+            
+            console.log('Displaying batch results:', batchResults);
+            
+            const results = batchResults.results || [];
+            console.log('Results array:', results);
+            
+            updateSummary(batchResults);
+            
+            resultsTableBody.innerHTML = '';
+            
+            results.forEach((result, index) => {
+                const row = document.createElement('tr');
+                row.dataset.index = index;
+                
+                const resultData = result;
+                
+                const filename = resultData.filename || 'Unknown';
+                const overallScore = resultData.overall_score || 0;
+                const status = resultData.status || 'LIKELY_AUTHENTIC';
+                const confidence = resultData.confidence || 0;
+                const imageSize = resultData.image_size || [0, 0];
+                const signals = resultData.signals || [];
+                const processingTime = resultData.processing_time || 0;
+                
+                const scorePercent = Math.round(overallScore * 100);
+                let scoreClass = 'score-low';
+                let scoreWidth = '30%';
+                if (scorePercent >= 70) {
+                    scoreClass = 'score-high';
+                    scoreWidth = '90%';
+                } else if (scorePercent >= 50) {
+                    scoreClass = 'score-medium';
+                    scoreWidth = '60%';
+                }
+                
+                const flaggedCount = signals.filter(s => s.status === 'flagged').length;
+                const warningCount = signals.filter(s => s.status === 'warning').length;
+                
+                // Format status for display (remove underscores)
+                const displayStatus = status.replace(/_/g, ' ');
+                
+                // Get thumbnail
+                const thumbnailSrc = fileDataUrls[filename] || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="%23f0f0f0"/></svg>';
+                
+                row.innerHTML = `
+                    <td style="min-width: 200px;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <img src="${thumbnailSrc}" alt="${filename}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 0.25rem; border: 1px solid var(--border);">
+                            <div>
+                                <div style="font-weight: 500; font-size: 0.875rem;">${filename}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-light);">
+                                    ${imageSize[0]} × ${imageSize[1]}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${status === 'LIKELY_AUTHENTIC' ? 'status-authentic' : 'status-review'}" style="white-space: nowrap;">
+                            ${displayStatus}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="score-indicator">
+                            <span style="min-width: 40px; font-size: 0.875rem;">${scorePercent}%</span>
+                            <div class="score-bar">
+                                <div class="score-fill ${scoreClass}" style="width: ${scoreWidth}"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="min-width: 150px;">
+                        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                            ${flaggedCount > 0 ? `<span class="signal-badge signal-flagged" style="font-size: 0.7rem;">${flaggedCount} flagged</span>` : ''}
+                            ${warningCount > 0 ? `<span class="signal-badge signal-warning" style="font-size: 0.7rem;">${warningCount} warning</span>` : ''}
+                            ${signals.length - flaggedCount - warningCount > 0 ? 
+                            `<span class="signal-badge signal-passed" style="font-size: 0.7rem;">${signals.length - flaggedCount - warningCount} passed</span>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <button class="action-button secondary-action view-detail-btn" data-index="${index}" title="View Details" style="padding: 0.25rem 0.5rem;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                
+                resultsTableBody.appendChild(row);
+            });
+            
+            noResultsRow.classList.add('hidden');
+            
+            document.querySelectorAll('.view-detail-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(e.currentTarget.dataset.index);
+                    showDetailedAnalysis(index);
+                });
+            });
+            
+            document.querySelectorAll('#resultsTableBody tr').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    if (!e.target.closest('.view-detail-btn')) {
+                        const index = parseInt(row.dataset.index);
+                        showDetailedAnalysis(index);
+                    }
+                });
+            });
+        }
+        
+        function updateSummary(batchResult) {
+            const total = batchResult.total_images || 0;
+            const processed = batchResult.processed || batchResult.results?.length || 0;
+            const failed = batchResult.failed || 0;
+            
+            let likelyAuthentic = 0;
+            let reviewRequired = 0;
+            
+            if (batchResult.results) {
+                batchResult.results.forEach(result => {
+                    const resultData = result;
+                    const status = resultData.status || 'LIKELY_AUTHENTIC';
+                    if (status === 'LIKELY_AUTHENTIC') {
+                        likelyAuthentic++;
+                    } else if (status === 'REVIEW_REQUIRED') {
+                        reviewRequired++;
+                    }
+                });
+            }
+            
+            resultsSummary.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-value">${processed}</div>
+                    <div class="summary-label">Total Processed</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${likelyAuthentic}</div>
+                    <div class="summary-label">Likely Authentic</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${reviewRequired}</div>
+                    <div class="summary-label">Review Required</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-value">${failed}</div>
+                    <div class="summary-label">Failed</div>
+                </div>
+            `;
+        }
+        
+        function showDetailedAnalysis(index) {
+            if (!batchResults || !batchResults.results || !batchResults.results[index]) return;
+            
+            selectedImageIndex = index;
+            const result = batchResults.results[index];
+            const resultData = result;
+            
+            const filename = resultData.filename || 'Unknown';
+            const overallScore = resultData.overall_score || 0;
+            const status = resultData.status || 'LIKELY_AUTHENTIC';
+            const confidence = resultData.confidence || 0;
+            const imageSize = resultData.image_size || [0, 0];
+            const processingTime = resultData.processing_time || 0;
+            const signals = resultData.signals || [];
+            
+            const scorePercent = Math.round(overallScore * 100);
+            const displayStatus = status.replace(/_/g, ' ');
+            
+            // Ensure detailed analysis is expanded
+            detailedAnalysisContent.classList.add('show');
+            detailedAnalysisIcon.classList.remove('fa-chevron-down');
+            detailedAnalysisIcon.classList.add('fa-chevron-up');
+            
+            document.getElementById('detailedAnalysisContent').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+            
+            // Build signals HTML
+            let signalsHtml = '';
+            if (signals && signals.length > 0) {
+                signals.forEach(signal => {
+                    let statusClass = 'signal-passed';
+                    if (signal.status === 'warning') statusClass = 'signal-warning';
+                    if (signal.status === 'flagged') statusClass = 'signal-flagged';
+                    
+                    const signalScore = Math.round((signal.score || 0) * 100);
+                    
+                    signalsHtml += `
+                        <div class="signal-card">
+                            <div class="signal-header">
+                                <strong>${signal.name || 'Unknown Metric'}</strong>
+                                <span class="signal-badge ${statusClass}">${signal.status}</span>
+                            </div>
+                            <p style="font-size: 0.875rem; margin-bottom: 0.5rem; color: var(--text-light);">
+                                ${signal.explanation || 'No explanation available.'}
+                            </p>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 0.75rem; color: var(--text-light);">
+                                    Score: ${signalScore}%
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                signalsHtml = '<p class="text-center" style="color: var(--text-light);">No detection signals available.</p>';
+            }
+            
+            detailedAnalysisContent.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <img src="${fileDataUrls[filename] || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><rect width="60" height="60" fill="%23f0f0f0"/></svg>'}" 
+                             alt="${filename}" 
+                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--border);">
+                        <div>
+                            <h4 style="margin-bottom: 0.25rem;">${filename}</h4>
+                            <div style="font-size: 0.875rem; color: var(--text-light);">
+                                ${imageSize[0]} × ${imageSize[1]} • ${processingTime.toFixed(2)}s
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="text-align: center; padding: 1rem; background-color: #f8fafc; border-radius: 0.5rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: ${scorePercent >= 70 ? '#e53e3e' : scorePercent >= 50 ? '#d69e2e' : '#38a169'};">${scorePercent}%</div>
+                            <div style="font-size: 0.875rem; color: var(--text-light);">Score</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background-color: #f8fafc; border-radius: 0.5rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: ${displayStatus.includes('REVIEW') ? '#d69e2e' : '#38a169'};">${displayStatus}</div>
+                            <div style="font-size: 0.875rem; color: var(--text-light);">Verdict</div>
+                        </div>
+                        <div style="text-align: center; padding: 1rem; background-color: #f8fafc; border-radius: 0.5rem;">
+                            <div style="font-size: 1.5rem; font-weight: 700;">${confidence}%</div>
+                            <div style="font-size: 0.875rem; color: var(--text-light);">Confidence</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 style="margin-bottom: 1rem;">Detection Signals</h4>
+                <div class="signal-grid">
+                    ${signalsHtml}
+                </div>
+                
+                <div class="signal-card" style="margin-top: 1.5rem; background-color: ${displayStatus.includes('REVIEW') ? 'rgba(214, 158, 46, 0.1)' : 'rgba(56, 161, 105, 0.1)'}; border-color: ${displayStatus.includes('REVIEW') ? 'rgba(214, 158, 46, 0.3)' : 'rgba(56, 161, 105, 0.3)'};">
+                    <div class="signal-header">
+                        <strong>Recommendation</strong>
+                    </div>
+                    <p style="margin-bottom: 0.5rem;">
+                        ${displayStatus.includes('REVIEW') ? 'Manual verification recommended' : 'No immediate action required'}
+                    </p>
+                    <div style="font-size: 0.875rem; color: var(--text-light);">
+                        Confidence: ${confidence}% likelihood of ${displayStatus.includes('REVIEW') ? 'AI generation' : 'authenticity'}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Export functions
+        async function exportCsv() {
+            if (!currentBatchId) {
+                showToast('No analysis results to export.', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            try {
+                // Using GET request since backend now accepts both GET and POST
+                const response = await fetch(`${CSV_REPORT_ENDPOINT}/${currentBatchId}`);
+                
+                if (response.ok) {
+                    // Get the blob data
+                    const blob = await response.blob();
+                    
+                    // Create download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = URL.createObjectURL(blob);
+                    downloadLink.download = `ImageScreenAI_Report_${currentBatchId}.csv`;
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    showToast('CSV report downloaded successfully.', 'success');
+                } else {
+                    showToast('Failed to generate CSV report.', 'error');
+                }
+            } catch (error) {
+                console.error('CSV export failed:', error);
+                showToast('CSV export failed. Please try again.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function exportPdf() {
+            if (!currentBatchId) {
+                showToast('No analysis results to export.', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            try {
+                // Using GET request since backend now accepts both GET and POST
+                const response = await fetch(`${PDF_REPORT_ENDPOINT}/${currentBatchId}`);
+                
+                if (response.ok) {
+                    // Get the blob data
+                    const blob = await response.blob();
+                    
+                    // Create download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = URL.createObjectURL(blob);
+                    downloadLink.download = `ImageScreenAI_Report_${currentBatchId}.pdf`;
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    showToast('PDF report downloaded successfully.', 'success');
+                } else {
+                    showToast('Failed to generate PDF report.', 'error');
+                }
+            } catch (error) {
+                console.error('PDF export failed:', error);
+                showToast('PDF export failed. Please try again.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function exportJson() {
+            if (!batchResults) {
+                showToast('No analysis results to export.', 'warning');
+                return;
+            }
+            
+            showLoading(true);
+            try {
+                const dataStr = JSON.stringify(batchResults, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.href = URL.createObjectURL(dataBlob);
+                downloadLink.download = `ImageScreenAI_Report_${new Date().toISOString().split('T')[0]}_${currentBatchId || 'report'}.json`;
+                
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                
+                showToast('JSON report downloaded successfully.', 'success');
+            } catch (error) {
+                console.error('JSON export failed:', error);
+                showToast('JSON export failed. Please try again.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Reset functions
+        function resetUI() {
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<div class="btn-content"><i class="fas fa-play"></i> Start Analysis</div>';
+            
+            setTimeout(() => {
+                progressContainer.classList.add('hidden');
+            }, 2000);
+        }
+        
+        function resetAnalysis() {
+            files = [];
+            fileDataUrls = {};
+            batchResults = null;
+            currentBatchId = null;
+            selectedImageIndex = null;
+            
+            updateThumbnailGrid();
+            clearResults();
+            resultsSection.classList.add('hidden');
+            detailedAnalysisContent.innerHTML = '<p id="noDetailedAnalysis" class="text-center" style="color: var(--text-light); padding: 2rem;"><i class="fas fa-eye" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i><br>Select an image to view detailed analysis</p>';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('Analysis reset. Ready for new upload.', 'success');
+        }
+        
+        function clearResults() {
+            resultsSummary.innerHTML = '';
+            resultsTableBody.innerHTML = '';
+            noResultsRow.classList.remove('hidden');
+            
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+        
+        // API health check
+        async function checkApiHealth() {
+            try {
+                const response = await fetch(HEALTH_ENDPOINT);
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    console.log('API connected successfully');
+                }
+            } catch (error) {
+                console.error('API health check failed:', error);
+            }
+        }
+    </script>
+</body>
+</html>
